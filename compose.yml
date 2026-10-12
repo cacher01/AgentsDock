@@ -1,0 +1,81 @@
+# Development/demo deployment only. See the runbook before adapting this file for production.
+name: ezcode
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: agent_platform
+      POSTGRES_USER: agent_platform
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-agent_platform_dev_only}
+    ports: ["54329:5432"]
+    volumes: [platform_postgres:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agent_platform -d agent_platform"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  migrate:
+    build: .
+    command: ["python", "-m", "scripts.postgres_migrate"]
+    environment:
+      PLATFORM_DATABASE_URL: postgresql://agent_platform:${POSTGRES_PASSWORD:-agent_platform_dev_only}@postgres:5432/agent_platform
+    depends_on:
+      postgres: {condition: service_healthy}
+  bootstrap:
+    build: {context: ./gateway}
+    entrypoint: ["/bootstrap"]
+    environment:
+      PLATFORM_DATABASE_URL: postgresql://agent_platform:${POSTGRES_PASSWORD:-agent_platform_dev_only}@postgres:5432/agent_platform
+      BOOTSTRAP_ADMIN_EMAIL: admin@example.com
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:?set BOOTSTRAP_ADMIN_PASSWORD}
+      BOOTSTRAP_ADMIN_NAME: EZcode Admin
+      BOOTSTRAP_WORKSPACE_NAME: EZcode Team
+      BOOTSTRAP_WORKSPACE_SLUG: demo-team
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+  runtime:
+    build: .
+    environment:
+      PLATFORM_REPOSITORY_BACKEND: postgres
+      PLATFORM_DATABASE_URL: postgresql://agent_platform:${POSTGRES_PASSWORD:-agent_platform_dev_only}@postgres:5432/agent_platform
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:?set INTERNAL_API_TOKEN}
+      MODEL_GATEWAY_ENABLED: "true"
+      MODEL_GATEWAY_URL: http://gateway:8080
+      ARTIFACT_ROOT: /data/artifacts
+      INPUT_FILE_ROOT: /data/input_files
+    volumes: [platform_artifacts:/data/artifacts, platform_inputs:/data/input_files]
+    depends_on:
+      bootstrap: {condition: service_completed_successfully}
+  worker:
+    build: .
+    command: ["python", "-m", "scripts.platform_worker"]
+    environment:
+      PLATFORM_REPOSITORY_BACKEND: postgres
+      PLATFORM_DATABASE_URL: postgresql://agent_platform:${POSTGRES_PASSWORD:-agent_platform_dev_only}@postgres:5432/agent_platform
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:?set INTERNAL_API_TOKEN}
+      MODEL_GATEWAY_ENABLED: "true"
+      MODEL_GATEWAY_URL: http://gateway:8080
+      ARTIFACT_ROOT: /data/artifacts
+      INPUT_FILE_ROOT: /data/input_files
+    volumes: [platform_artifacts:/data/artifacts, platform_inputs:/data/input_files]
+    depends_on:
+      bootstrap: {condition: service_completed_successfully}
+  gateway:
+    build: {context: ./gateway}
+    environment:
+      GATEWAY_ADDRESS: :8080
+      PLATFORM_DATABASE_URL: postgresql://agent_platform:${POSTGRES_PASSWORD:-agent_platform_dev_only}@postgres:5432/agent_platform
+      PYTHON_RUNTIME_URL: http://runtime:8000
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:?set INTERNAL_API_TOKEN}
+      MODEL_MASTER_KEY: ${MODEL_MASTER_KEY:?set MODEL_MASTER_KEY}
+      PLATFORM_TASK_API_ENABLED: "true"
+      SESSION_COOKIE_SECURE: "false"
+      INPUT_FILE_MAX_BYTES: ${INPUT_FILE_MAX_BYTES:-20971520}
+    ports: ["8080:8080"]
+    depends_on:
+      runtime: {condition: service_started}
+volumes:
+  platform_postgres:
+  platform_artifacts:
+  platform_inputs:

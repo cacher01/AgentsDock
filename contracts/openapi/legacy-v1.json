@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "scope": "legacy business routes; framework documentation routes and static mounts excluded",
+  "routes": [
+    {"method": "POST", "path": "/tasks", "name": "create_task"},
+    {"method": "POST", "path": "/sessions", "name": "create_session"},
+    {"method": "GET", "path": "/sessions", "name": "list_sessions"},
+    {"method": "GET", "path": "/sessions/{session_id}", "name": "get_session"},
+    {"method": "POST", "path": "/sessions/{session_id}/tasks", "name": "create_session_task"},
+    {"method": "GET", "path": "/tasks", "name": "list_tasks"},
+    {"method": "GET", "path": "/tasks/{task_id}", "name": "get_task"},
+    {"method": "POST", "path": "/tasks/{task_id}/cancel", "name": "cancel_task"},
+    {"method": "GET", "path": "/tasks/{task_id}/events", "name": "get_events"},
+    {"method": "GET", "path": "/tasks/{task_id}/result", "name": "get_result"},
+    {"method": "GET", "path": "/tasks/{task_id}/replay", "name": "replay_task"},
+    {"method": "GET", "path": "/tasks/{task_id}/artifacts", "name": "list_artifacts"},
+    {"method": "GET", "path": "/tasks/{task_id}/artifacts/{artifact_id}", "name": "download_artifact"},
+    {"method": "GET", "path": "/quota/summary", "name": "quota_summary"},
+    {"method": "GET", "path": "/quota/breakdown", "name": "quota_breakdown"},
+    {"method": "GET", "path": "/quota/timeline", "name": "quota_timeline"},
+    {"method": "GET", "path": "/quota/limits", "name": "quota_limits"},
+    {"method": "GET", "path": "/quota/recent", "name": "quota_recent"},
+    {"method": "GET", "path": "/quota/sessions", "name": "quota_sessions"},
+    {"method": "GET", "path": "/quota/pricing", "name": "quota_pricing"},
+    {"method": "GET", "path": "/tasks/{task_id}/stream", "name": "stream_events"},
+    {"method": "GET", "path": "/", "name": "ui"},
+    {"method": "GET", "path": "/ui", "name": "ui"}
+  ],
+  "response_fields": {
+    "task": ["task_id", "session_id", "input", "objective", "workflow", "status", "token_estimate", "error_summary", "created_at", "updated_at", "completed_at"],
+    "task_create": ["task_id", "status", "workflow", "session_id"],
+    "result": ["result_id", "task_id", "answer", "citations", "limitations", "confidence", "used_workflow", "created_at"],
+    "replay": ["task", "events", "agents", "tool_calls", "evidence", "result", "artifacts"]
+  },
+  "sse_terminal_status": {
+    "task_completed": "completed",
+    "task_degraded": "degraded",
+    "task_failed": "failed",
+    "task_cancelled": "cancelled"
+  }
+}

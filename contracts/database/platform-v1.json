@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "id_strategy": "stable prefixed text identifiers",
+  "timestamp_type": "timestamptz",
+  "tables": {
+    "users": "gateway",
+    "workspaces": "gateway",
+    "workspace_budget_policies": "gateway",
+    "workspace_memberships": "gateway",
+    "invitations": "gateway",
+    "auth_sessions": "gateway",
+    "model_connections": "gateway",
+    "model_variants": "gateway",
+    "model_fallback_groups": "gateway",
+    "model_fallback_members": "gateway",
+    "tool_definitions": "runtime",
+    "workspace_tool_bindings": "gateway",
+    "task_sessions": "runtime",
+    "tasks": "runtime",
+    "task_runs": "runtime",
+    "execution_nodes": "runtime",
+    "checkpoints": "runtime",
+    "worker_leases": "runtime",
+    "agent_runs": "runtime",
+    "events": "runtime",
+    "llm_calls": "gateway",
+    "tool_calls": "runtime",
+    "evidence": "runtime",
+    "results": "runtime",
+    "input_files": "runtime",
+    "document_blocks": "runtime",
+    "artifacts": "runtime",
+    "resource_shares": "runtime",
+    "comments": "runtime",
+    "mentions": "runtime",
+    "notifications": "runtime",
+    "audit_logs": "append_only_shared"
+  },
+  "scoped_tables": [
+    "workspace_budget_policies",
+    "model_connections",
+    "model_fallback_groups",
+    "workspace_tool_bindings",
+    "task_sessions",
+    "tasks",
+    "input_files",
+    "artifacts",
+    "resource_shares",
+    "audit_logs"
+  ],
+  "private_resource_tables": [
+    "task_sessions",
+    "tasks",
+    "input_files",
+    "artifacts"
+  ],
+  "append_only_tables": [
+    "events",
+    "audit_logs"
+  ],
+  "sensitive_columns": {
+    "model_connections": [
+      "secret_ciphertext",
+      "secret_nonce",
+      "secret_key_version"
+    ],
+    "auth_sessions": [
+      "token_hash"
+    ],
+    "invitations": [
+      "token_hash"
+    ]
+  }
+}

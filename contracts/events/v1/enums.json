@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "task_statuses": [
+    "created",
+    "queued",
+    "running",
+    "completed",
+    "degraded",
+    "failed",
+    "cancelled"
+  ],
+  "event_types": [
+    "task_created",
+    "task_started",
+    "workflow_selected",
+    "plan_generated",
+    "agent_spawned",
+    "agent_started",
+    "agent_completed",
+    "message_sent",
+    "tool_call_requested",
+    "tool_call_completed",
+    "tool_call_failed",
+    "context_summarized",
+    "final_answer_generated",
+    "task_failed",
+    "task_completed",
+    "task_degraded",
+    "task_cancelled",
+    "workflow_degraded",
+    "graph_node_created",
+    "graph_node_updated",
+    "graph_edge_created",
+    "critic_completed",
+    "critic_skipped",
+    "citation_check_completed"
+  ]
+}

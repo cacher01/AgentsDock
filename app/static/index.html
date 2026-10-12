@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EZcode</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body>
+    <div class="grid-overlay" aria-hidden="true"></div>
+
+    <header class="app-header">
+      <div style="display:flex; align-items:center;">
+        <div class="brand">
+          <span class="brand-mark">E</span>
+          <div class="brand-meta">
+            <span>EZcode</span>
+            <small>多智能体 AI 治理工作台</small>
+          </div>
+        </div>
+        <nav class="app-nav" aria-label="primary">
+          <a href="/" class="is-active" aria-current="page">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9"/><path d="M5 10v10h14V10"/></svg>
+            工作台
+          </a>
+        </nav>
+      </div>
+      <div class="run-status">
+        <button id="quotaChip" class="quota-chip" type="button" aria-label="额度看板" aria-expanded="false">
+          <span class="chip-icon">⚡</span>
+          <span class="chip-tokens" id="chipTokens">— tokens</span>
+          <span class="chip-cost" id="chipCost">$—</span>
+          <span class="chip-caret">▾</span>
+        </button>
+        <button id="notificationButton" class="secondary-button small notification-button" type="button" hidden>通知 <span id="notificationCount" hidden>0</span></button>
+        <button id="adminButton" class="secondary-button small" type="button" hidden>治理</button>
+        <span id="currentUser" class="task-id-label" hidden></span>
+        <span id="taskId" class="task-id-label">就绪</span>
+        <strong id="taskStatus" data-state="idle">Idle</strong>
+      </div>
+
+    <!-- Quota popover dashboard -->
+    <div id="quotaPopover" class="quota-popover" hidden>
+      <div class="popover-arrow"></div>
+      <header class="popover-header">
+        <h3>额度看板</h3>
+        <div class="popover-tabs" role="tablist">
+          <button class="pop-tab is-active" data-scope="today" type="button">今日</button>
+          <button class="pop-tab" data-scope="all" type="button">累计</button>
+        </div>
+      </header>
+
+      <section class="kpi-row">
+        <div class="kpi-tile">
+          <div class="kpi-label">任务数</div>
+          <div class="kpi-value" id="kpiTasks">—</div>
+          <div class="kpi-sub" id="kpiTasksSub">—</div>
+        </div>
+        <div class="kpi-tile">
+          <div class="kpi-label">总 Tokens</div>
+          <div class="kpi-value" id="kpiTokens">—</div>
+          <div class="kpi-sub" id="kpiTokensSub">—</div>
+        </div>
+        <div class="kpi-tile">
+          <div class="kpi-label">估算成本</div>
+          <div class="kpi-value" id="kpiCost">—</div>
+          <div class="kpi-sub" id="kpiCostSub">—</div>
+        </div>
+        <div class="kpi-tile">
+          <div class="kpi-label">成功率</div>
+          <div class="kpi-value" id="kpiSuccess">—</div>
+          <div class="kpi-sub" id="kpiSuccessSub">—</div>
+        </div>
+      </section>
+
+      <section class="meter-row">
+        <div class="meter-tile">
+          <div class="meter-label">
+            <span>Tokens 限额</span>
+            <span id="meterTokensLabel">— / —</span>
+          </div>
+          <div class="meter-track"><div class="meter-fill" id="meterTokensFill"></div></div>
+        </div>
+        <div class="meter-tile">
+          <div class="meter-label">
+            <span>成本限额</span>
+            <span id="meterCostLabel">$— / $—</span>
+          </div>
+          <div class="meter-track"><div class="meter-fill" id="meterCostFill"></div></div>
+        </div>
+      </section>
+
+      <section class="chart-grid">
+        <div class="chart-tile">
+          <h4>按工作流 Tokens 占比</h4>
+          <div id="chartWorkflow" class="chart-canvas"></div>
+          <div id="chartWorkflowLegend" class="chart-legend"></div>
+        </div>
+        <div class="chart-tile">
+          <h4>近 7 天 Tokens 趋势</h4>
+          <div id="chartTimeline" class="chart-canvas"></div>
+        </div>
+      </section>
+
+      <section class="table-tile">
+        <h4>最近任务</h4>
+        <div class="quota-table-wrap">
+          <table class="quota-table" id="recentTasksTable">
+            <thead>
+              <tr><th>任务</th><th>工作流</th><th>状态</th><th class="num">Tokens</th><th class="num">成本</th></tr>
+            </thead>
+            <tbody id="recentTasksBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="table-tile">
+        <h4>对话消耗排行</h4>
+        <div class="quota-table-wrap">
+          <table class="quota-table" id="sessionsTable">
+            <thead>
+              <tr><th>对话</th><th class="num">任务</th><th class="num">Tokens</th><th class="num">成本</th></tr>
+            </thead>
+            <tbody id="sessionsBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+    </header>
+
+    <main class="workspace">
+      <section class="primary-column">
+        <form id="taskForm" class="task-composer">
+          <div class="section-title">
+            <div><span>任务输入</span></div>
+            <span id="workflowLabel" class="workflow-label">自动路由</span>
+          </div>
+          <div class="session-bar">
+            <label for="sessionSelect">对话</label>
+            <select id="sessionSelect">
+              <option value="">— 无对话（独立任务）—</option>
+            </select>
+            <button id="newSessionButton" type="button" class="secondary-button small">＋ 新建对话</button>
+          </div>
+          <div id="modelBar" class="model-bar" hidden>
+            <label for="modelSelect">模型</label>
+            <select id="modelSelect"><option value="">自动选择</option></select>
+          </div>
+          <label class="sr-only" for="questionInput">Task</label>
+          <textarea id="questionInput" name="input" rows="6" placeholder="输入任务，例如：分析附件并生成带引用的总结" required></textarea>
+          <div id="fileBar" class="file-bar" hidden>
+            <label class="file-button" for="fileInput">＋ 添加资料</label>
+            <input id="fileInput" type="file" multiple accept=".txt,.md,.csv,.tsv,.json,.pdf,.docx,.xlsx">
+            <div id="fileList" class="file-list"></div>
+          </div>
+          <div class="composer-footer">
+            <div class="prompt-list">
+              <button type="button" data-prompt="查询北京天气和当地时间">🌤 天气 + 时间</button>
+              <button type="button" data-prompt="调研特斯拉公司，概括业务、财务、竞争格局和近期动态，并给出引用">📚 调研报告</button>
+              <button type="button" data-prompt="分析多智能体框架的发展趋势、代表项目、风险和适用场景">🔍 多角度分析</button>
+              <button type="button" data-prompt="先调研特斯拉公司基本情况，再分析其竞争格局，最后生成风险报告">🔗 分步执行</button>
+              <button type="button" data-prompt="生成一份多智能体框架调研报告，并保存为 Markdown 文件">📄 生成报告</button>
+            </div>
+            <div class="actions">
+              <button id="shareButton" class="secondary-button" type="button" hidden disabled>分享</button>
+              <button id="cancelButton" class="secondary-button" type="button" disabled>取消</button>
+              <button id="submitButton" class="primary-button" type="submit">提交任务</button>
+            </div>
+          </div>
+        </form>
+
+        <section class="result-panel">
+          <div class="section-title result-title">
+            <div><span>结果</span></div>
+            <span id="confidenceLabel">置信度 --</span>
+          </div>
+          <article id="finalAnswer" class="answer empty">提交任务后，最终答案将显示在这里。</article>
+          <section class="sources">
+            <h3>引用来源</h3>
+            <ul id="citations" class="citations empty"><li>暂无来源。</li></ul>
+          </section>
+          <section class="sources artifacts-section">
+            <h3>
+              <span>产物文件</span>
+              <span id="artifactHint" class="artifact-hint" hidden>产物已请求</span>
+            </h3>
+            <ul id="artifacts" class="citations empty">
+              <li class="artifact-empty">本任务未请求导出文件。提示：在任务中加入 <code>生成报告</code> / <code>导出 csv</code> / <code>打包 zip</code> 等关键词即可生成产物。</li>
+            </ul>
+          </section>
+          <section id="commentsSection" class="sources comments-section" hidden>
+            <h3>团队评论</h3>
+            <div id="commentList" class="comment-list"><div class="empty-state">暂无评论。</div></div>
+            <form id="commentForm" class="comment-form">
+              <textarea id="commentBody" rows="2" maxlength="4000" placeholder="写下评论" required></textarea>
+              <select id="commentMention"><option value="">不提及成员</option></select>
+              <button class="primary-button" type="submit">发送</button>
+            </form>
+          </section>
+          <details class="raw-details">
+            <summary>原始数据</summary>
+            <pre id="executionDetails">{}</pre>
+          </details>
+        </section>
+      </section>
+
+      <aside class="runtime-column">
+        <section class="runtime-panel tree-panel">
+          <div class="panel-heading">
+            <div><span>执行图</span></div>
+            <span id="eventCount">0</span>
+          </div>
+          <div id="treeEmpty" class="empty-state">提交任务后将在此展示执行流程。</div>
+          <div id="executionTree" class="execution-tree" aria-live="polite"></div>
+        </section>
+
+        <section class="runtime-panel inspector-panel">
+          <div class="panel-heading">
+            <div><span>节点详情</span></div>
+          </div>
+          <pre id="selectedEvent">点击左侧执行图中的节点查看详情。</pre>
+        </section>
+
+        <section class="runtime-panel history-panel">
+          <div class="panel-heading">
+            <div><span>历史任务</span></div>
+            <button id="refreshHistory" type="button">刷新</button>
+          </div>
+          <div id="taskHistory" class="task-history"></div>
+        </section>
+
+        <section class="runtime-panel session-panel">
+          <div class="panel-heading">
+            <div><span>对话记录</span></div>
+            <span class="thread-hint" title="同一对话内的任务会自动注入上下文">↻ 上下文共享</span>
+          </div>
+          <div id="sessionTasks" class="task-history">
+            <div class="empty-state">选择一个对话查看任务时间线。<br>点击任务可重放完整执行过程。</div>
+          </div>
+        </section>
+
+        <details class="runtime-panel event-panel">
+          <summary>事件时间线</summary>
+          <ol id="eventStream" class="event-stream"></ol>
+        </details>
+      </aside>
+    </main>
+
+    <div id="loginOverlay" class="platform-overlay" hidden>
+      <form id="loginForm" class="platform-dialog">
+        <h2>团队 AI 工作台</h2>
+        <p>登录后进入所属团队空间。</p>
+        <label>邮箱<input id="loginEmail" type="email" autocomplete="username" required></label>
+        <label>密码<input id="loginPassword" type="password" autocomplete="current-password" required></label>
+        <label>工作区 ID（可选）<input id="loginWorkspace" type="text"></label>
+        <div id="loginError" class="form-error"></div>
+        <button class="primary-button" type="submit">登录</button>
+      </form>
+    </div>
+
+    <div id="notificationOverlay" class="platform-overlay" hidden>
+      <section class="platform-dialog notification-dialog">
+        <header><div><h2>站内通知</h2><p>任务分享、评论与提及</p></div><button id="closeNotifications" class="secondary-button small" type="button">关闭</button></header>
+        <div id="notificationList" class="notification-list"><div class="empty-state">暂无通知。</div></div>
+      </section>
+    </div>
+    <div id="governanceOverlay" class="platform-overlay" hidden>
+      <section class="platform-dialog governance-dialog">
+        <header>
+          <div><h2>团队治理</h2><p>任务成本、模型、工具和异常概览</p></div>
+          <button id="closeGovernance" class="secondary-button small" type="button">关闭</button>
+        </header>
+        <div class="admin-controls">
+          <form id="modelForm">
+            <h3>模型连接</h3>
+            <input id="modelConnectionName" placeholder="连接名称" required>
+            <input id="modelBaseUrl" type="url" placeholder="OpenAI-compatible Base URL" required>
+            <input id="modelName" placeholder="模型名称" required>
+            <input id="modelApiKey" type="password" placeholder="API Key" required>
+            <input id="modelInputPrice" type="number" min="0" step="0.0001" placeholder="输入价格 / 百万 tokens">
+            <input id="modelOutputPrice" type="number" min="0" step="0.0001" placeholder="输出价格 / 百万 tokens">
+            <button class="primary-button" type="submit">保存模型</button>
+          </form>
+          <form id="inviteForm">
+            <h3>邀请成员</h3>
+            <input id="inviteEmail" type="email" placeholder="成员邮箱" required>
+            <select id="inviteRole"><option value="member">普通成员</option><option value="admin">管理员</option></select>
+            <button class="primary-button" type="submit">创建邀请</button>
+            <output id="inviteOutput"></output>
+          </form>          <form id="budgetForm" class="budget-form">
+            <h3>软预算策略</h3>
+            <label>单任务 Tokens<input id="budgetTokenLimit" type="number" min="1" step="1" required></label>
+            <label>单任务成本（USD）<input id="budgetTaskCostLimit" type="number" min="0.000001" step="0.000001" required></label>
+            <label>每日成本（USD）<input id="budgetDailyCostLimit" type="number" min="0.000001" step="0.000001" required></label>
+            <button class="primary-button" type="submit">保存预算</button>
+            <output id="budgetOutput">软阈值只影响自动选模，不会截断最终综合。</output>
+          </form>
+        </div>
+        <div class="admin-resource-grid">
+          <section><h3>已配置模型</h3><div id="modelList" class="admin-resource-list"></div></section>
+          <section><h3>工具权限</h3><div id="toolList" class="admin-resource-list"></div></section>
+        </div>
+        <section class="audit-section"><h3>管理审计</h3><div id="auditList" class="admin-resource-list audit-list"><div class="empty-state">暂无审计记录。</div></div></section>
+        <div class="governance-table-wrap">
+          <table class="governance-table">
+            <thead><tr><th>任务</th><th>状态</th><th>工作流</th><th>Tokens</th><th>成本</th><th>耗时</th></tr></thead>
+            <tbody id="governanceBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>

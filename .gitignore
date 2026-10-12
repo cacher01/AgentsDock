@@ -1,0 +1,62 @@
+# Python bytecode, packages, and build output
+__pycache__/
+*.py[cod]
+*$py.class
+build/
+dist/
+*.egg-info/
+
+# Virtual environments and local configuration
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+env/
+
+# Test, lint, coverage, and language caches
+.pytest_cache/
+.pytest_tmp*/
+.pytest-tmp/
+.test_tmp/
+.test-tmp/
+.ruff_cache/
+.mypy_cache/
+.go-cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Runtime data and generated artifacts
+.run/
+artifacts/
+input_files/
+.artifact*_tmp*/
+orchestration.db
+*.sqlite
+*.sqlite3
+*.log
+*.err
+*.out
+
+# Editors and operating systems
+.idea/
+.vscode/
+.claude/
+.DS_Store
+Thumbs.db
+
+# Internal development material and AI workspace metadata
+.agents/
+.codex/
+CLAUDE.md
+docs/
+reup_docs/
+picture/
+scripts/README.md
+infra/migrations/README.md
+
+# Local Go test output
+gateway/coverage
+gateway/.test_tmp/

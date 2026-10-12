@@ -1,0 +1,1 @@
+"""EZcode application package."""

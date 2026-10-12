@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "required_fields": [
+    "event_id",
+    "task_id",
+    "agent_id",
+    "type",
+    "timestamp",
+    "sequence",
+    "payload",
+    "summary"
+  ],
+  "field_types": {
+    "event_id": "string",
+    "task_id": "string",
+    "agent_id": "string|null",
+    "type": "string",
+    "timestamp": "string",
+    "sequence": "integer",
+    "payload": "object",
+    "summary": "string"
+  }
+}
