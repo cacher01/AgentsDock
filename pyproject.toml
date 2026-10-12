@@ -3,9 +3,9 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ezcode"
+name = "agentsdock"
 version = "0.1.0"
-description = "EZcode is a governed multi-agent task platform for teams."
+description = "AgentsDock is a governed multi-agent task platform for teams."
 requires-python = ">=3.10"
 dependencies = [
   "fastapi>=0.100.0",

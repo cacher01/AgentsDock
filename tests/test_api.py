@@ -33,4 +33,4 @@ def test_api_lists_events_and_serves_ui():
     assert events_response.status_code == 200
     assert events_response.json()
     assert ui_response.status_code == 200
-    assert "EZcode" in ui_response.text
+    assert "AgentsDock" in ui_response.text

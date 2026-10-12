@@ -1,5 +1,5 @@
 # Development/demo deployment only. See the runbook before adapting this file for production.
-name: ezcode
+name: agentsdock
 
 services:
   postgres:
@@ -29,8 +29,8 @@ services:
       PLATFORM_DATABASE_URL: postgresql://agent_platform:${POSTGRES_PASSWORD:-agent_platform_dev_only}@postgres:5432/agent_platform
       BOOTSTRAP_ADMIN_EMAIL: admin@example.com
       BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:?set BOOTSTRAP_ADMIN_PASSWORD}
-      BOOTSTRAP_ADMIN_NAME: EZcode Admin
-      BOOTSTRAP_WORKSPACE_NAME: EZcode Team
+      BOOTSTRAP_ADMIN_NAME: AgentsDock Admin
+      BOOTSTRAP_WORKSPACE_NAME: AgentsDock Team
       BOOTSTRAP_WORKSPACE_SLUG: demo-team
     depends_on:
       migrate: {condition: service_completed_successfully}

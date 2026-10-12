@@ -1,1 +1,1 @@
-"""EZcode application package."""
+"""AgentsDock application package."""

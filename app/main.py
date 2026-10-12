@@ -82,7 +82,7 @@ def create_app(testing: bool = False) -> FastAPI:
         run_inline=testing,
     )
 
-    app = FastAPI(title="EZcode")
+    app = FastAPI(title="AgentsDock")
     app.state.repository = repository
     app.state.platform_repositories = platform_repositories
     app.router.add_event_handler("shutdown", platform_repositories.close)
